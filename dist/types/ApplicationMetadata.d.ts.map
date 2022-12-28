@@ -1,0 +1,1 @@
+{"version":3,"file":"ApplicationMetadata.d.ts","sourceRoot":"","sources":["../../src/types/ApplicationMetadata.ts"],"names":[],"mappings":"AAAA,OAAO,KAAK,EAAE,UAAU,EAAE,MAAM,sBAAsB,CAAC;AAEvD,MAAM,MAAM,mBAAmB,GAAG;IAChC,GAAG,EAAE,MAAM,CAAC;IACZ,IAAI,EAAE,MAAM,CAAC;IACb,WAAW,EAAE,MAAM,CAAC;IACpB,IAAI,EAAE,OAAO,UAAU,CAAC;CACzB,CAAC"}
