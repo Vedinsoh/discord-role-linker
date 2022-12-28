@@ -1,5 +1,5 @@
 {
-  "name": "@discord/linked-roles",
+  "name": "discord-role-linker",
   "version": "0.0.0",
   "description": "Manage your Discord linked roles with ease!",
   "author": "Vedinsoh",
@@ -12,10 +12,10 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Vedinsoh/discord-linked-roles.git"
+    "url": "git+https://github.com/Vedinsoh/discord-role-linker.git"
   },
   "bugs": {
-    "url": "https://github.com/Vedinsoh/discord-linked-roles/issues"
+    "url": "https://github.com/Vedinsoh/discord-role-linker/issues"
   },
   "publishConfig": {
     "access": "public"
