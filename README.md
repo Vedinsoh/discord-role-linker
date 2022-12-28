@@ -1,6 +1,8 @@
 # Discord Role Linker
 A powerful library to easily manage your Discord linked roles!
 
+[![NPM](https://nodei.co/npm/discord-role-linker.png?compact=true)](https://nodei.co/npm/discord-role-linker/)
+
 ## Basic usage
 ### Create your Discord application
 - Create a new application on the [Discord Developer Portal](https://discord.com/developers/applications)
@@ -32,7 +34,9 @@ In order for your application to work, you need to register your metadata first.
 ```js
 const { MetadataTypes } = require('discord-role-linker');
 
-roleLinker.registerMetaData([
+// ...your RoleLinker instance
+
+roleLinker.registerMetadata([
     {
         key: 'level',
         name: 'Level',
@@ -97,7 +101,7 @@ app.listen(3000, () => {
 ## Getting the user's metadata
 - You can get the user metadata by using the `getUserMetadata` method.
 ```js
-const metadata = await roleLinker.getUserMetaData(userId);
+const metadata = await roleLinker.getUserMetadata(userId);
 ```
 ## Fetching the user
 - You can fetch the user by using the `fetchUser` method
