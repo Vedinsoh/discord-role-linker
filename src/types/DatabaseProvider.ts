@@ -1,9 +1,17 @@
 import type { Snowflake } from 'discord-api-types/globals';
-import type { OAuthTokenData } from './OAuthTokenData';
+import type { OAuthTokensData } from './OAuthTokensData';
+import type { Nullable } from './UtilTypes';
+
+export enum ProviderCalls {
+  getUserTokens = 'getUserTokens',
+  fetchAllUsers = 'fetchAllUsers',
+  createOrUpdateUser = 'createOrUpdateUser',
+  deleteUser = 'deleteUser',
+}
 
 export type DatabaseProvider = {
-  findAll: () => Promise<{ tokens: OAuthTokenData; id: string }>;
-  fetchUser: (userId: Snowflake) => Promise<OAuthTokenData | undefined>;
-  createOrUpdate: (userId: Snowflake, token: OAuthTokenData) => Promise<void>;
-  deleteUser: (userId: Snowflake) => Promise<void>;
+  [ProviderCalls.getUserTokens]: (userId: Nullable<Snowflake>) => Promise<OAuthTokensData | null>;
+  [ProviderCalls.fetchAllUsers]: () => Promise<{ userId: Snowflake; tokenData: OAuthTokensData }[]>;
+  [ProviderCalls.createOrUpdateUser]: (userId: Snowflake, token: OAuthTokensData) => Promise<OAuthTokensData>;
+  [ProviderCalls.deleteUser]: (userId: Snowflake) => Promise<boolean>;
 };

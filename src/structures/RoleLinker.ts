@@ -1,7 +1,7 @@
-import type { RESTGetAPIUserResult, Snowflake } from 'discord-api-types/v10';
+import type { Snowflake } from 'discord-api-types/v10';
 import type { ApplicationMetadata } from '../types/ApplicationMetadata';
 import type { DatabaseProvider } from '../types/DatabaseProvider';
-import type { OAuthTokenData } from '../types/OAuthTokenData';
+import type { OAuthTokensData } from '../types/OAuthTokensData';
 import Authorization from './Authorization';
 import { RESTManager, RESTManagerOptions } from './RESTManager';
 import { TokenStore } from './TokenStore';
@@ -11,18 +11,18 @@ export type RoleLinkerOptions = RESTManagerOptions & {
 };
 
 export class RoleLinker {
-  auth = new Authorization(this);
-  tokenStore: TokenStore;
-  restManager: RESTManager;
+  public auth = new Authorization(this);
+  public tokenStore: TokenStore;
+  public restManager: RESTManager;
 
   constructor(options: RoleLinkerOptions) {
+    this.tokenStore = new TokenStore(options.databaseProvider);
     this.restManager = new RESTManager({
       token: options.token,
       clientId: options.clientId,
       clientSecret: options.clientSecret,
       redirectUri: options.redirectUri,
     });
-    this.tokenStore = new TokenStore(options.databaseProvider);
   }
 
   public async registerMetadata(metadata: ApplicationMetadata[]) {
@@ -30,7 +30,11 @@ export class RoleLinker {
     if (metadata.length < 1) throw new Error('At least one metadata is required to register it in the application.');
     if (metadata.length > 5) throw new Error('You can only register 5 metadata fields in the application.');
 
-    return this.restManager.registerApplicationMetadata(metadata);
+    return this.restManager.registerApplicationMetadata(metadata).then((value: unknown) => {
+      // eslint-disable-next-line no-console
+      console.log('Registered application metadata successfully!');
+      return value;
+    });
   }
 
   public async getUserMetadata(userId: Snowflake) {
@@ -45,12 +49,7 @@ export class RoleLinker {
     return this.restManager.setUserMetadata(tokens, platformName, metadata);
   }
 
-  // TODO fix types
-  public async fetchUser(userId: Snowflake, access_token?: string): Promise<RESTGetAPIUserResult> {
-    let tokens = await this.tokenStore.get(userId);
-    if (!tokens && !access_token) throw new Error('No tokens found for the user');
-    if (!tokens && access_token) tokens = { access_token: access_token, refresh_token: '', expires_at: 0 };
-
-    return this.restManager.getCurrentAuthorization(tokens as OAuthTokenData).then((x: any) => x.user) as any;
+  public async getUserData(tokens: OAuthTokensData) {
+    return this.restManager.getUserData(tokens);
   }
 }

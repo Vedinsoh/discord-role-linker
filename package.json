@@ -22,6 +22,7 @@
   },
   "scripts": {
     "build": "rm -rf dist && tsc",
+    "build:watch": "tsc -w",
     "reinstall": "rm -rf node_modules && yarn install",
     "update": "yarn upgrade-interactive",
     "lint": "eslint src --ext .ts",

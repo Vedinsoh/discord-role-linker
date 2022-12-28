@@ -1,6 +1,5 @@
 import type { Snowflake } from 'discord-api-types/v10';
 import type { Request, Response } from 'express';
-import type { OAuthTokenData } from '../types/OAuthTokenData';
 import type { RoleLinker } from './RoleLinker';
 
 export class Authorization {
@@ -10,19 +9,43 @@ export class Authorization {
     this._application = application;
   }
 
-  private async _getOAuthTokenData(code: string): Promise<OAuthTokenData> {
-    return this._application.restManager.createOauth2Token(code);
+  /**
+   * To start the flow, generate the OAuth2 consent dialog URL for Discord,
+   * and redirect the user there.
+   */
+  public init(_req: Request, res: Response) {
+    const { state, url } = this._application.restManager.oauthManager.getOAuthUrl();
+    res.cookie('clientState', state, {
+      maxAge: 1000 * 60 * 5, // * 5 minutes
+      signed: true,
+    });
+    return res.redirect(url);
+  }
+
+  /**
+   * Verifies the code and state parameters
+   * @returns The code if the state parameter is valid, otherwise null
+   */
+  public verifyCode(req: Request) {
+    const code = req.query['code'];
+    const discordState = req.query['state'];
+
+    // * Make sure the state parameter exists
+    const { clientState } = req.signedCookies;
+
+    if (clientState !== discordState) return null;
+    return code;
+  }
+
+  public async getOAuthTokens(code: string) {
+    return this._application.restManager.oauthManager.getOAuthTokens(code);
   }
 
   public async getUserAndStoreToken(code: string) {
-    const tokens = await this._getOAuthTokenData(code);
+    const tokens = await this.getOAuthTokens(code);
+    const user = await this._application.getUserData(tokens);
 
-    // TODO: Fix this
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    const user = await this._application.fetchUser(null, tokens.access_token);
-
-    this._application.tokenStore.set(user.id, tokens);
+    await this._application.tokenStore.set(user.id, tokens);
     return user;
   }
 
@@ -32,7 +55,7 @@ export class Authorization {
 
     if (tokens.expires_at < Date.now()) {
       // TODO fix any type
-      const response: any = await this._application.restManager.refreshOauth2Token(tokens.refresh_token);
+      const response: any = await this._application.restManager.oauthManager.refreshOAuthToken(tokens.refresh_token);
       if (response) {
         const tokens = response;
         tokens.expires_at = Date.now() + tokens.expires_in * 1000;
@@ -45,27 +68,6 @@ export class Authorization {
       }
     }
     return tokens.access_token;
-  }
-
-  public setCookieAndRedirect(_req: Request, res: Response) {
-    const { state, url } = this._application.restManager.getOauth2Url();
-    // * Info on why is state required: https://discord.com/developers/docs/topics/oauth2#state-and-security
-    res.cookie('clientState', state, {
-      maxAge: 1000 * 60 * 5, // * 5 minutes
-      signed: true,
-    });
-    return res.redirect(url);
-  }
-
-  public verifyCookieAndReturnCode(req: Request) {
-    const code = req.query['code'];
-    const discordState = req.query['state'];
-
-    // * Make sure the state parameter exists
-    const { clientState } = req.signedCookies;
-
-    if (clientState !== discordState) return null;
-    return code;
   }
 }
 

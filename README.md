@@ -1,12 +1,15 @@
 # Discord Role Linker
 A powerful library to easily manage your Discord linked roles!
+- Supports full Discord OAuth2 authorization flow
+- Support for persistently storing the access tokens in the database of your choice
+- Built with modularity in mind, so you can easily extend it to your needs
 
 [![NPM](https://nodei.co/npm/discord-role-linker.png?compact=true)](https://nodei.co/npm/discord-role-linker/)
 
 ## Basic usage
 ### Create your Discord application
 - Create a new application on the [Discord Developer Portal](https://discord.com/developers/applications)
-- Create a new bot and copy the bot token
+- Go to the **Bot** tab, create a new bot and copy the bot token (click on **Reset Token** button)
 - Go to the **General Information** tab and set the following: `http://localhost:3000/linked-role` in the **Linked roles verification URL** field
 - Go to the **OAuth2** tab and add the following URI in the **Redirects** section: `http://localhost:3000/auth-callback`
 - On the same page, copy your **Client Secret**, above the Redirects section
@@ -41,7 +44,7 @@ roleLinker.registerMetadata([
         key: 'level',
         name: 'Level',
         description: 'Minimum user level',
-        type: MetadataTypes.Number.GreaterThanOrEqual,
+        type: MetadataTypes.Integer.GreaterThanOrEqual,
     },
     {
         key: 'account_age',
@@ -71,12 +74,12 @@ const app = express();
 app.use(cookieParser(crypto.randomUUID()));
 
 // Set the cookie and redirect to the Discord OAuth2 page
-app.get('/linked-role', roleLinker.auth.setCookieAndRedirect.bind(roleLinker.auth));
+app.get('/linked-role', roleLinker.auth.init.bind(roleLinker.auth));
 
-app.get('/auth-callback', async (req, res) => {
+app.get('/oauth-callback', async (req, res) => {
     try {
         // Verifies if the cookie matches the one given on the /linked-role route
-        const code = roleLinker.auth.verifyCookieAndReturnCode(req, res);
+        const code = roleLinker.auth.verifyCode(req);
         if (!code) return res.sendStatus(403);
 
         // Gets the user and stores the tokens

@@ -1,135 +1,65 @@
-/* eslint-disable no-console */
-import { GatewayVersion, OAuth2Scopes, Routes } from 'discord-api-types/v10';
-import crypto from 'node:crypto';
+import { GatewayVersion, RESTGetAPIUserResult, Routes } from 'discord-api-types/v10';
 import type { ApplicationMetadata } from '../types/ApplicationMetadata';
-import type { OAuthTokenData } from '../types/OAuthTokenData';
+import type { OAuthTokensData } from '../types/OAuthTokensData';
+import { OAuthManager, OAuthManagerOptions } from './OAuthManager';
 import { REST } from '@discordjs/rest';
-import { DefaultRestOptions as RestOptions } from '@discordjs/rest';
-
-export const defaultScopes = [OAuth2Scopes.RoleConnectionsWrite, OAuth2Scopes.Identify];
 
 const jsonHeaders = {
   'Content-Type': 'application/json',
 };
-const createAuthorizationHeader = (tokenData: OAuthTokenData) => ({
+const createAuthorizationHeader = (tokenData: OAuthTokensData) => ({
   Authorization: `Bearer ${tokenData.access_token}`,
 });
 
-export type RESTManagerOptions = {
-  token: string;
+export type RESTManagerOptions = OAuthManagerOptions & {
   clientId: string;
-  clientSecret: string;
-  redirectUri: string;
-  scopes?: string[];
+  token: string;
 };
 
 export class RESTManager {
-  private _rest: REST;
-  private _clientId: string;
-  private _clientSecret: string;
-  private _redirectUri: string;
-  private _scopes: string[] = defaultScopes;
+  public rest: REST;
+  public clientId: string;
+  public oauthManager: OAuthManager;
 
   constructor(options: RESTManagerOptions) {
-    this._rest = new REST({ version: GatewayVersion }).setToken(options.token);
+    this.rest = new REST({ version: GatewayVersion }).setToken(options.token);
 
     if (!options.token) throw new Error('A token is required in the application options');
     if (!options.clientId) throw new Error('A application ID is required in the application options');
-    if (!options.clientSecret) throw new Error('A client secret is required in the application options');
-    if (!options.redirectUri) throw new Error('A redirect URI is required in the application options');
 
-    this._clientId = options.clientId;
-    this._clientSecret = options.clientSecret;
-    this._redirectUri = options.redirectUri;
-    if (options.scopes) this._scopes = options.scopes;
-  }
+    this.clientId = options.clientId;
 
-  private get _defaultBody() {
-    return {
-      client_id: this._clientId,
-      client_secret: this._clientSecret,
-    };
-  }
-
-  // TODO improve this to ensure there are no collisions
-  private _generateUuid() {
-    return crypto.randomUUID();
-  }
-
-  public getOauth2Url() {
-    const uuid = this._generateUuid();
-    const url = new URL(`${RestOptions.api}/oauth2/authorize`);
-
-    url.searchParams.set('client_id', this._clientId);
-    url.searchParams.set('redirect_uri', this._redirectUri);
-    url.searchParams.set('prompt', 'consent');
-    url.searchParams.set('response_type', 'code');
-    url.searchParams.set('state', uuid);
-    url.searchParams.set('scope', this._scopes.join(' '));
-
-    return { state: uuid, url: url.toString() };
-  }
-
-  public async createOauth2Token(code: string) {
-    const body = new URLSearchParams({
-      ...this._defaultBody,
-      redirect_uri: this._redirectUri,
-      grant_type: 'authorization_code',
-      code,
-    });
-
-    return this._rest.post(Routes.oauth2TokenExchange(), {
-      body,
-      passThroughBody: true,
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
+    this.oauthManager = new OAuthManager(
+      {
+        clientSecret: options.clientSecret,
+        redirectUri: options.redirectUri,
+        scopes: options.scopes,
       },
-    }) as Promise<OAuthTokenData>;
-  }
-
-  public async refreshOauth2Token(refreshToken: string) {
-    const body = new URLSearchParams({
-      ...this._defaultBody,
-      grant_type: 'refresh_token',
-      refresh_token: refreshToken,
-    });
-
-    return this._rest.post(Routes.oauth2TokenExchange(), {
-      body,
-      passThroughBody: true,
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-    }) as Promise<OAuthTokenData>;
+      this
+    );
   }
 
   public async registerApplicationMetadata(metadata: ApplicationMetadata[]) {
-    return this._rest
-      .put(Routes.applicationRoleConnectionMetadata(this._clientId), {
+    return this.rest
+      .put(Routes.applicationRoleConnectionMetadata(this.clientId), {
         headers: jsonHeaders,
         body: metadata,
       })
-      .then((value: unknown) => {
-        console.log('Registered application metadata successfully!');
-        return value;
-      })
       .catch((error: Error) => {
-        console.error('Failed to register application metadata!');
-        return error;
+        throw new Error(`Failed to register application metadata: ${error.message}`);
       });
   }
 
-  public async getUserMetadata(tokenData: OAuthTokenData) {
-    return this._rest.get(Routes.applicationRoleConnectionMetadata(this._clientId), {
+  public async getUserMetadata(tokenData: OAuthTokensData) {
+    return this.rest.get(Routes.applicationRoleConnectionMetadata(this.clientId), {
       headers: {
         ...createAuthorizationHeader(tokenData),
       },
-      auth: false,
     });
   }
 
-  public async setUserMetadata(tokenData: OAuthTokenData, platformName: string, metadata: { [key: string]: string }) {
-    return this._rest.put(Routes.userApplicationRoleConnection(this._clientId), {
+  public async setUserMetadata(tokenData: OAuthTokensData, platformName: string, metadata: { [key: string]: string }) {
+    return this.rest.put(Routes.userApplicationRoleConnection(this.clientId), {
       headers: {
         ...jsonHeaders,
         ...createAuthorizationHeader(tokenData),
@@ -138,16 +68,14 @@ export class RESTManager {
         platform_name: platformName,
         metadata: metadata,
       },
-      auth: false,
     });
   }
 
-  public async getCurrentAuthorization(tokenData: OAuthTokenData) {
-    return this._rest.get(Routes.oauth2CurrentAuthorization(), {
+  public async getUserData(tokenData: OAuthTokensData) {
+    return this.rest.get(Routes.oauth2CurrentAuthorization(), {
       headers: {
         ...createAuthorizationHeader(tokenData),
       },
-      auth: false,
-    });
+    }) as Promise<RESTGetAPIUserResult>;
   }
 }

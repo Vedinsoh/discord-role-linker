@@ -1,7 +1,7 @@
 export * from './constants/MetadataTypes';
 
-export * from './providers/Map';
-export * from './providers/MongoDB';
+export * from './providers/MapProvider';
+export * from './providers/MongoDBProvider';
 
 export * from './structures/RoleLinker';
 export * from './structures/Authorization';
