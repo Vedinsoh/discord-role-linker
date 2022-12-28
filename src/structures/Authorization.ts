@@ -1,33 +1,13 @@
-import { OAuth2Scopes, Snowflake } from 'discord-api-types/v10';
+import type { Snowflake } from 'discord-api-types/v10';
 import type { Request, Response } from 'express';
-import crypto from 'node:crypto';
 import type Application from 'structures/Application';
 import type { OAuthTokens } from 'types/OAuthTokens';
-import { DefaultRestOptions as RestOptions } from '@discordjs/rest';
-
-export const defaultScopes = [OAuth2Scopes.RoleConnectionsWrite, OAuth2Scopes.Identify];
 
 class Authorization {
   private _application: Application;
-  private _scopes: string[] = defaultScopes;
 
-  constructor(application: Application, scopes?: string[]) {
+  constructor(application: Application) {
     this._application = application;
-    if (scopes) this._scopes = scopes;
-  }
-
-  public getOAuthUrl() {
-    const uuid = crypto.randomUUID(); // TODO
-    const url = new URL(`${RestOptions.api}/oauth2/authorize`);
-
-    url.searchParams.set('client_id', this._application.id);
-    url.searchParams.set('prompt', 'consent');
-    url.searchParams.set('redirect_uri', this._application.redirectUri);
-    url.searchParams.set('response_type', 'code');
-    url.searchParams.set('state', uuid);
-    url.searchParams.set('scope', this._scopes.join(' '));
-
-    return { state: uuid, url: url.toString() };
   }
 
   public async getOAuthTokens(code: string): Promise<OAuthTokens> {
@@ -68,7 +48,7 @@ class Authorization {
   }
 
   public setCookieAndRedirect(_req: Request, res: Response) {
-    const { state, url } = this.getOAuthUrl();
+    const { state, url } = this._application.restManager.getOauth2Url();
     // * Store the signed state param in the user's cookies so we can verify the value later. See: https://discord.com/developers/docs/topics/oauth2#state-and-security
     res.cookie('clientState', state, {
       maxAge: 1000 * 60 * 5, // * 5 minutes

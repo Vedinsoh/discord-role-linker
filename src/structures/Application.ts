@@ -1,41 +1,26 @@
 import type { RESTGetAPIUserResult, Snowflake } from 'discord-api-types/v10';
 import { MapProvider } from 'providers/MapStorage';
 import Authorization from 'structures/Authorization';
-import RESTManager from 'structures/RESTManager';
+import RESTManager, { RESTManagerOptions } from 'structures/RESTManager';
 import TokenStorage, { DatabaseProvider } from 'structures/TokenStorage';
 import type { ApplicationMetadata } from 'types/ApplicationMetadata';
 
-export type ApplicationOptions = {
-  token: string;
-  id: string;
-  clientSecret: string;
-  redirectUri: string;
-  scopes?: string[];
+export type ApplicationOptions = RESTManagerOptions & {
   databaseProvider?: DatabaseProvider;
 };
 
 class Application {
-  token: string;
-  id: string;
-  clientSecret: string;
-  redirectUri: string;
-  auth: Authorization;
+  auth: Authorization = new Authorization(this);
   tokenStorage: TokenStorage;
   restManager: RESTManager;
 
   constructor(options: ApplicationOptions) {
-    this.token = options.token;
-    this.id = options.id;
-    this.clientSecret = options.clientSecret;
-    this.redirectUri = options.redirectUri;
-
-    if (!this.token) throw new Error('A token is required in the application options');
-    if (!this.id) throw new Error('A application ID is required in the application options');
-    if (!this.clientSecret) throw new Error('A client secret is required in the application options');
-    if (!this.redirectUri) throw new Error('A redirect URI is required in the application options');
-
-    this.auth = new Authorization(this, options.scopes);
-    this.restManager = new RESTManager(this);
+    this.restManager = new RESTManager({
+      token: options.token,
+      clientId: options.clientId,
+      clientSecret: options.clientSecret,
+      redirectUri: options.redirectUri,
+    });
     this.tokenStorage = new TokenStorage((options.databaseProvider as DatabaseProvider) || new MapProvider());
   }
 
