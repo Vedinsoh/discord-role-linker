@@ -1,17 +1,18 @@
 import type { RESTGetAPIUserResult, Snowflake } from 'discord-api-types/v10';
-import { MapProvider } from 'providers/MapStorage';
-import Authorization from 'structures/Authorization';
-import RESTManager, { RESTManagerOptions } from 'structures/RESTManager';
-import TokenStorage, { DatabaseProvider } from 'structures/TokenStorage';
-import type { ApplicationMetadata } from 'types/ApplicationMetadata';
+import type { ApplicationMetadata } from '../types/ApplicationMetadata';
+import type { DatabaseProvider } from '../types/DatabaseProvider';
+import type { OAuthTokenData } from '../types/OAuthTokenData';
+import Authorization from './Authorization';
+import { RESTManager, RESTManagerOptions } from './RESTManager';
+import { TokenStore } from './TokenStore';
 
 export type ApplicationOptions = RESTManagerOptions & {
   databaseProvider?: DatabaseProvider;
 };
 
-class Application {
+export class Application {
   auth: Authorization = new Authorization(this);
-  tokenStorage: TokenStorage;
+  tokenStore: TokenStore;
   restManager: RESTManager;
 
   constructor(options: ApplicationOptions) {
@@ -21,10 +22,10 @@ class Application {
       clientSecret: options.clientSecret,
       redirectUri: options.redirectUri,
     });
-    this.tokenStorage = new TokenStorage((options.databaseProvider as DatabaseProvider) || new MapProvider());
+    this.tokenStore = new TokenStore(options.databaseProvider);
   }
 
-  async registerMetadata(metadata: ApplicationMetadata[]) {
+  public async registerMetadata(metadata: ApplicationMetadata[]) {
     if (!metadata) throw new Error('Metadata is required to register it in the application.');
     if (metadata.length < 1) throw new Error('At least one metadata is required to register it in the application.');
     if (metadata.length > 5) throw new Error('You can only register 5 metadata fields in the application.');
@@ -32,27 +33,24 @@ class Application {
     return this.restManager.registerApplicationMetadata(metadata);
   }
 
-  async getUserMetadata(userId: Snowflake) {
-    const tokens = await this.tokenStorage.get(userId);
+  public async getUserMetadata(userId: Snowflake) {
+    const tokens = await this.tokenStore.get(userId);
     if (!tokens) throw new Error('No tokens found for the user');
-    return this.restManager.getMetadata();
+    return this.restManager.getUserMetadata(tokens);
   }
 
-  async setUserMetadata(userId: Snowflake, platformName: string, metadata: { [key: string]: string }) {
-    const tokens = await this.tokenStorage.get(userId);
+  public async setUserMetadata(userId: Snowflake, platformName: string, metadata: { [key: string]: string }) {
+    const tokens = await this.tokenStore.get(userId);
     if (!tokens) throw new Error('No tokens found for the user');
-
-    return this.restManager.putUserMetadata(platformName, metadata);
+    return this.restManager.setUserMetadata(tokens, platformName, metadata);
   }
 
   // TODO fix types
-  async fetchUser(userId: Snowflake, access_token?: string): Promise<RESTGetAPIUserResult> {
-    let tokens = await this.tokenStorage.get(userId);
+  public async fetchUser(userId: Snowflake, access_token?: string): Promise<RESTGetAPIUserResult> {
+    let tokens = await this.tokenStore.get(userId);
     if (!tokens && !access_token) throw new Error('No tokens found for the user');
-    if (!tokens && access_token) tokens = { access_token: access_token, refresh_token: '' } as any;
+    if (!tokens && access_token) tokens = { access_token: access_token, refresh_token: '', expires_at: 0 };
 
-    return this.restManager.getCurrentAuthorization().then((x: any) => x.user) as any;
+    return this.restManager.getCurrentAuthorization(tokens as OAuthTokenData).then((x: any) => x.user) as any;
   }
 }
-
-export default Application;

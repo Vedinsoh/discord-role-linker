@@ -1,33 +1,33 @@
 import type { Snowflake } from 'discord-api-types/v10';
 import type { Request, Response } from 'express';
-import type Application from 'structures/Application';
-import type { OAuthTokens } from 'types/OAuthTokens';
+import type { OAuthTokenData } from '../types/OAuthTokenData';
+import type { Application } from './Application';
 
-class Authorization {
+export class Authorization {
   private _application: Application;
 
   constructor(application: Application) {
     this._application = application;
   }
 
-  public async getOAuthTokens(code: string): Promise<OAuthTokens> {
+  private async _getOAuthTokenData(code: string): Promise<OAuthTokenData> {
     return this._application.restManager.createOauth2Token(code);
   }
 
   public async getUserAndStoreToken(code: string) {
-    const tokens = await this.getOAuthTokens(code);
+    const tokens = await this._getOAuthTokenData(code);
 
     // TODO: Fix this
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     const user = await this._application.fetchUser(null, tokens.access_token);
 
-    this._application.tokenStorage.set(user.id, tokens);
+    this._application.tokenStore.set(user.id, tokens);
     return user;
   }
 
   public async getAccessToken(userId: Snowflake) {
-    const tokens = await this._application.tokenStorage.get(userId);
+    const tokens = await this._application.tokenStore.get(userId);
     if (!tokens) throw new Error('No tokens found for user');
 
     if (tokens.expires_at < Date.now()) {
@@ -38,7 +38,7 @@ class Authorization {
         tokens.expires_at = Date.now() + tokens.expires_in * 1000;
 
         // * Store Tokens
-        this._application.tokenStorage.set(userId, tokens);
+        this._application.tokenStore.set(userId, tokens);
         return tokens.access_token;
       } else {
         throw new Error(`Error refreshing access token: [${response.status}] ${response.statusText}`);

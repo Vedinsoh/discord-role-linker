@@ -1,13 +1,13 @@
 import type { Snowflake } from 'discord-api-types/globals';
 import mongoose from 'mongoose';
-import type { OAuthTokens } from 'types/OAuthTokens';
+import type { OAuthTokenData } from '../types/OAuthTokenData';
 
 const Schema = mongoose.Schema;
 
 const userSchema = new Schema(
   {
     id: String,
-    tokens: {
+    tokenData: {
       access_token: String,
       refresh_token: String,
       expires_at: Number,
@@ -18,7 +18,7 @@ const userSchema = new Schema(
 
 export const UserModel = mongoose.model('userTokens', userSchema);
 
-class MongoDBProvider {
+export class MongoDBProvider {
   constructor(mongoUri: string) {
     mongoose.connect(mongoUri);
   }
@@ -26,10 +26,10 @@ class MongoDBProvider {
   public async fetchUser(userId: Snowflake) {
     const user = await UserModel.findOne({ id: userId });
     if (!user) return undefined;
-    return user.tokens;
+    return user.tokenData;
   }
 
-  public async createOrUpdate(userId: Snowflake, tokens: OAuthTokens) {
+  public async createOrUpdate(userId: Snowflake, tokenData: OAuthTokenData) {
     //*  Check if user exits
     const user = await UserModel.findOne({ id: userId });
 
@@ -37,15 +37,15 @@ class MongoDBProvider {
       // * Create new user
       const newUser = new UserModel({
         id: userId,
-        tokens: tokens,
+        tokens: tokenData,
       });
       await newUser.save();
     } else {
       // * Update user
-      user.tokens = tokens;
+      user.tokenData = tokenData;
       await user.save();
     }
-    return tokens;
+    return tokenData;
   }
 
   public async deleteUser(userId: Snowflake) {
@@ -58,5 +58,3 @@ class MongoDBProvider {
     return UserModel.find();
   }
 }
-
-export default MongoDBProvider;

@@ -1,8 +1,8 @@
 /* eslint-disable no-console */
 import { GatewayVersion, OAuth2Scopes, Routes } from 'discord-api-types/v10';
 import crypto from 'node:crypto';
-import type { ApplicationMetadata } from 'types/ApplicationMetadata';
-import type { OAuthTokens } from 'types/OAuthTokens';
+import type { ApplicationMetadata } from '../types/ApplicationMetadata';
+import type { OAuthTokenData } from '../types/OAuthTokenData';
 import { REST } from '@discordjs/rest';
 import { DefaultRestOptions as RestOptions } from '@discordjs/rest';
 
@@ -11,6 +11,9 @@ export const defaultScopes = [OAuth2Scopes.RoleConnectionsWrite, OAuth2Scopes.Id
 const jsonHeaders = {
   'Content-Type': 'application/json',
 };
+const createAuthorizationHeader = (tokenData: OAuthTokenData) => ({
+  Authorization: `Bearer ${tokenData.access_token}`,
+});
 
 export type RESTManagerOptions = {
   token: string;
@@ -20,7 +23,7 @@ export type RESTManagerOptions = {
   scopes?: string[];
 };
 
-class RESTManager {
+export class RESTManager {
   private _rest: REST;
   private _clientId: string;
   private _clientSecret: string;
@@ -76,7 +79,7 @@ class RESTManager {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
-    }) as Promise<OAuthTokens>;
+    }) as Promise<OAuthTokenData>;
   }
 
   public async refreshOauth2Token(refreshToken: string) {
@@ -92,7 +95,7 @@ class RESTManager {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
-    }) as Promise<OAuthTokens>;
+    }) as Promise<OAuthTokenData>;
   }
 
   public async registerApplicationMetadata(metadata: ApplicationMetadata[]) {
@@ -111,15 +114,21 @@ class RESTManager {
       });
   }
 
-  public async getMetadata() {
+  public async getUserMetadata(tokenData: OAuthTokenData) {
     return this._rest.get(Routes.applicationRoleConnectionMetadata(this._clientId), {
+      headers: {
+        ...createAuthorizationHeader(tokenData),
+      },
       auth: false,
     });
   }
 
-  public async putUserMetadata(platformName: string, metadata: { [key: string]: string }) {
+  public async setUserMetadata(tokenData: OAuthTokenData, platformName: string, metadata: { [key: string]: string }) {
     return this._rest.put(Routes.userApplicationRoleConnection(this._clientId), {
-      headers: jsonHeaders,
+      headers: {
+        ...jsonHeaders,
+        ...createAuthorizationHeader(tokenData),
+      },
       body: {
         platform_name: platformName,
         metadata: metadata,
@@ -128,11 +137,12 @@ class RESTManager {
     });
   }
 
-  public async getCurrentAuthorization() {
+  public async getCurrentAuthorization(tokenData: OAuthTokenData) {
     return this._rest.get(Routes.oauth2CurrentAuthorization(), {
+      headers: {
+        ...createAuthorizationHeader(tokenData),
+      },
       auth: false,
     });
   }
 }
-
-export default RESTManager;

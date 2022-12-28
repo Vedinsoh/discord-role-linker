@@ -1,4 +1,4 @@
-export type OAuthTokens = {
+export type OAuthTokenData = {
   access_token: string;
   refresh_token: string;
   expires_at: number;
