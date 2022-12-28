@@ -6,16 +6,16 @@ import Authorization from './Authorization';
 import { RESTManager, RESTManagerOptions } from './RESTManager';
 import { TokenStore } from './TokenStore';
 
-export type ApplicationOptions = RESTManagerOptions & {
+export type RoleLinkerOptions = RESTManagerOptions & {
   databaseProvider?: DatabaseProvider;
 };
 
-export class Application {
-  auth: Authorization = new Authorization(this);
+export class RoleLinker {
+  auth = new Authorization(this);
   tokenStore: TokenStore;
   restManager: RESTManager;
 
-  constructor(options: ApplicationOptions) {
+  constructor(options: RoleLinkerOptions) {
     this.restManager = new RESTManager({
       token: options.token,
       clientId: options.clientId,

@@ -51,8 +51,13 @@ export class RESTManager {
     };
   }
 
+  // TODO improve this to ensure there are no collisions
+  private _generateUuid() {
+    return crypto.randomUUID();
+  }
+
   public getOauth2Url() {
-    const uuid = crypto.randomUUID(); // TODO
+    const uuid = this._generateUuid();
     const url = new URL(`${RestOptions.api}/oauth2/authorize`);
 
     url.searchParams.set('client_id', this._clientId);

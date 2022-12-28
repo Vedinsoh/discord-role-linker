@@ -1,12 +1,12 @@
 import type { Snowflake } from 'discord-api-types/v10';
 import type { Request, Response } from 'express';
 import type { OAuthTokenData } from '../types/OAuthTokenData';
-import type { Application } from './Application';
+import type { RoleLinker } from './RoleLinker';
 
 export class Authorization {
-  private _application: Application;
+  private _application: RoleLinker;
 
-  constructor(application: Application) {
+  constructor(application: RoleLinker) {
     this._application = application;
   }
 
@@ -49,7 +49,7 @@ export class Authorization {
 
   public setCookieAndRedirect(_req: Request, res: Response) {
     const { state, url } = this._application.restManager.getOauth2Url();
-    // * Store the signed state param in the user's cookies so we can verify the value later. See: https://discord.com/developers/docs/topics/oauth2#state-and-security
+    // * Info on why is state required: https://discord.com/developers/docs/topics/oauth2#state-and-security
     res.cookie('clientState', state, {
       maxAge: 1000 * 60 * 5, // * 5 minutes
       signed: true,
