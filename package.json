@@ -1,6 +1,6 @@
 {
   "name": "discord-role-linker",
-  "version": "0.0.0",
+  "version": "0.0.2",
   "description": "Manage your Discord linked roles with ease!",
   "author": "Vedinsoh",
   "license": "MIT",
@@ -20,10 +20,8 @@
   "publishConfig": {
     "access": "public"
   },
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc",
+    "build": "rm -rf dist && tsc",
     "reinstall": "rm -rf node_modules && yarn install",
     "update": "yarn upgrade-interactive",
     "lint": "eslint src --ext .ts",
@@ -53,9 +51,9 @@
     "typescript": "^4.9.4"
   },
   "engines": {
-    "type": "module",
-    "node": "^16.9.0",
-    "npm": "please-use-yarn"
+    "node": "^16.9.0"
   },
-  "packageManager": "yarn@3.3.1"
+  "packageManager": "yarn@3.3.1",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts"
 }

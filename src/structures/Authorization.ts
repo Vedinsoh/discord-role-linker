@@ -1,11 +1,11 @@
-import type { Snowflake } from 'discord-api-types/v10';
+import { OAuth2Scopes, Snowflake } from 'discord-api-types/v10';
 import type { Request, Response } from 'express';
 import crypto from 'node:crypto';
 import type Application from 'structures/Application';
 import type { OAuthTokens } from 'types/OAuthTokens';
 import { DefaultRestOptions as RestOptions } from '@discordjs/rest';
 
-export const defaultScopes = ['role_connections.write', 'identify'];
+export const defaultScopes = [OAuth2Scopes.RoleConnectionsWrite, OAuth2Scopes.Identify];
 
 class Authorization {
   private _application: Application;

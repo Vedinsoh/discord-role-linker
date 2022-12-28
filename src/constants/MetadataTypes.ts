@@ -39,7 +39,7 @@ enum BooleanTypes {
   NotEqual = 8,
 }
 
-export const ValueTypes = {
+export const MetadataTypes = {
   Integer: IntegerTypes,
   Number: IntegerTypes,
   DateTime: DateTimeTypes,

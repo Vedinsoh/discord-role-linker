@@ -1,4 +1,4 @@
-export * from 'constants/ValueTypes';
+export * from 'constants/MetadataTypes';
 
 export * from 'providers/MapStorage';
 export * from 'providers/MongoDB';

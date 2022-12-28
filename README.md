@@ -1,2 +1,2 @@
-# Discord Linked Roles
+# Discord Role Linker
 Work in progress

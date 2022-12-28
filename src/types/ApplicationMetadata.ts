@@ -1,8 +1,8 @@
-import type { ValueTypes } from 'constants/ValueTypes';
+import type { MetadataTypes } from 'constants/MetadataTypes';
 
 export type ApplicationMetadata = {
   key: string;
   name: string;
   description: string;
-  type: typeof ValueTypes;
+  type: typeof MetadataTypes;
 };
