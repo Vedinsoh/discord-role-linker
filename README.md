@@ -115,7 +115,7 @@ const user = await roleLinker.fetchUser(userId);
 ```js
 const updateUser = async (userId) => {
     const user = await roleLinker.fetchUser(userId);
-    roleLinker.setUserMetadata(user.id, user.username, { level: 123, account_age: Date.now() })
+    roleLinker.setUserMetadata(user.id, user.username, { level: 123 })
 }
 
 const updateAllUsers = async () => {
@@ -139,7 +139,9 @@ const roleLinker = new RoleLinker({
     clientId: 'YOUR CLIENT ID',
     clientSecret: 'YOUR CLIENT SECRET',
     redirectUri: 'YOUR REDIRECT URI',
-    databaseProvider: new MongoDBProvider('mongodb://localhost:27017/linked-roles')
+    databaseProvider: new MongoDBProvider({
+        uri: 'mongodb://localhost:27017/linked-roles',
+    })
 });
 ```
 You can use one of the following built-in providers to store the access tokens in a database:
@@ -150,4 +152,4 @@ You can use one of the following built-in providers to store the access tokens i
 
 # Bugs, glitches and issues
 
-If you encounter any problems feel free to open an issue or message me on Discord: `Vedinsoh#0001`</a>
+If you encounter any problems feel free to open an issue or message me on Discord: `Vedinsoh#0001`

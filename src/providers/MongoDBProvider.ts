@@ -4,7 +4,7 @@ import { ProviderCalls } from '../types/DatabaseProvider';
 import type { OAuthTokensData } from '../types/OAuthTokensData';
 
 export type MongoDBProviderOptions = {
-  mongoUri: string;
+  uri: string;
   schemaName?: string;
 };
 
@@ -27,7 +27,7 @@ export class MongoDBProvider {
       )
     );
 
-    mongoose.connect(options.mongoUri);
+    mongoose.connect(options.uri);
   }
 
   public async [ProviderCalls.getUserTokens](userId: Snowflake) {
