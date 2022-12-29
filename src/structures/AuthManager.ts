@@ -2,19 +2,15 @@ import type { Snowflake } from 'discord-api-types/v10';
 import type { Request, Response } from 'express';
 import type { RoleLinker } from './RoleLinker';
 
-export class Authorization {
-  private _application: RoleLinker;
-
-  constructor(application: RoleLinker) {
-    this._application = application;
-  }
+export class AuthManager {
+  constructor(private _client: RoleLinker) {}
 
   /**
    * To start the flow, generate the OAuth2 consent dialog URL for Discord,
    * and redirect the user there.
    */
   public init(_req: Request, res: Response) {
-    const { state, url } = this._application.restManager.oauthManager.getOAuthUrl();
+    const { state, url } = this._client.restManager.oauthManager.getOAuthUrl();
     res.cookie('clientState', state, {
       maxAge: 1000 * 60 * 5, // * 5 minutes
       signed: true,
@@ -37,38 +33,37 @@ export class Authorization {
     return code;
   }
 
+  /**
+   * Given an OAuth2 code from the scope approval page, make a request to Discord's
+   * OAuth2 service to retreive an access token, refresh token, and expiration.
+   */
   public async getOAuthTokens(code: string) {
-    return this._application.restManager.oauthManager.getOAuthTokens(code);
+    return this._client.restManager.oauthManager.getOAuthTokens(code);
   }
 
   public async getUserAndStoreToken(code: string) {
     const tokens = await this.getOAuthTokens(code);
-    const user = await this._application.getUserData(tokens);
-
-    await this._application.tokenStore.set(user.id, tokens);
+    const user = await this._client.getUserData(tokens);
+    if (!user) throw new Error('No user found');
+    await this._client.tokenStore.set(user.id, tokens);
     return user;
   }
 
   public async getAccessToken(userId: Snowflake) {
-    const tokens = await this._application.tokenStore.get(userId);
+    const tokens = await this._client.tokenStore.get(userId);
     if (!tokens) throw new Error('No tokens found for user');
 
     if (tokens.expires_at < Date.now()) {
-      // TODO fix any type
-      const response: any = await this._application.restManager.oauthManager.refreshOAuthToken(tokens.refresh_token);
-      if (response) {
-        const tokens = response;
-        tokens.expires_at = Date.now() + tokens.expires_in * 1000;
-
-        // * Store Tokens
-        this._application.tokenStore.set(userId, tokens);
+      const resTokens = await this._client.restManager.oauthManager.refreshOAuthToken(tokens.refresh_token);
+      if (resTokens) {
+        this._client.tokenStore.set(userId, resTokens);
         return tokens.access_token;
       } else {
-        throw new Error(`Error refreshing access token: [${response.status}] ${response.statusText}`);
+        throw new Error(`Error refreshing access token for user ${userId}`);
       }
     }
     return tokens.access_token;
   }
 }
 
-export default Authorization;
+export default AuthManager;

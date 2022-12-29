@@ -1,5 +1,5 @@
 # Discord Role Linker
-A powerful library to easily manage your Discord linked roles!
+A powerful library to easily manage your Discord linked roles using OAuth2!
 - Supports full Discord OAuth2 authorization flow
 - Support for persistently storing the access tokens in the database of your choice
 - Built with modularity in mind, so you can easily extend it to your needs
@@ -39,19 +39,13 @@ const { MetadataTypes } = require('discord-role-linker');
 
 // ...your RoleLinker instance
 
-roleLinker.registerMetadata([
+roleLinker.metadata.register([
     {
         key: 'level',
         name: 'Level',
         description: 'Minimum user level',
         type: MetadataTypes.Integer.GreaterThanOrEqual,
     },
-    {
-        key: 'account_age',
-        name: 'Account age',
-        description: 'Minimum days since account creation',
-        type: MetadataTypes.DateTime.GreaterThanOrEqual,
-    }
 ]);
 ```
 
@@ -76,6 +70,7 @@ app.use(cookieParser(crypto.randomUUID()));
 // Set the cookie and redirect to the Discord OAuth2 page
 app.get('/linked-role', roleLinker.auth.init.bind(roleLinker.auth));
 
+// Endpoint Discord will redirect to after the user has authorized your application
 app.get('/oauth-callback', async (req, res) => {
     try {
         // Verifies if the cookie matches the one given on the /linked-role route
@@ -86,7 +81,8 @@ app.get('/oauth-callback', async (req, res) => {
         const user = await roleLinker.auth.getUserAndStoreToken(code);
         
         // Set user's metadata
-        roleLinker.setUserMetadata(user.id, user.username ,{ level: 24, account_age: Date.now() })
+        await roleLinker.metadata.setUserData(user.id, user.username, { level: 24 });
+
         res.send("Your account has been linked successfully!")
     } catch (error) {
         console.error(error);

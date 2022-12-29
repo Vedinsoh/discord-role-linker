@@ -1,5 +1,5 @@
-import { GatewayVersion, RESTGetAPIUserResult, Routes } from 'discord-api-types/v10';
-import type { ApplicationMetadata } from '../types/ApplicationMetadata';
+import { GatewayVersion, RESTGetAPIOAuth2CurrentAuthorizationResult, Routes, Snowflake } from 'discord-api-types/v10';
+import type { ApplicationMetadata, MetadataValues } from '../types/ApplicationMetadata';
 import type { OAuthTokensData } from '../types/OAuthTokensData';
 import { OAuthManager, OAuthManagerOptions } from './OAuthManager';
 import { REST } from '@discordjs/rest';
@@ -12,13 +12,19 @@ const createAuthorizationHeader = (tokenData: OAuthTokensData) => ({
 });
 
 export type RESTManagerOptions = OAuthManagerOptions & {
-  clientId: string;
+  /**
+   * The client ID of your application.
+   */
+  clientId: Snowflake;
+  /**
+   * The bot token of your application.
+   */
   token: string;
 };
 
 export class RESTManager {
   public rest: REST;
-  public clientId: string;
+  public clientId: Snowflake;
   public oauthManager: OAuthManager;
 
   constructor(options: RESTManagerOptions) {
@@ -28,7 +34,6 @@ export class RESTManager {
     if (!options.clientId) throw new Error('A application ID is required in the application options');
 
     this.clientId = options.clientId;
-
     this.oauthManager = new OAuthManager(
       {
         clientSecret: options.clientSecret,
@@ -50,15 +55,45 @@ export class RESTManager {
       });
   }
 
+  /**
+   * Get the information about the user.
+   * @param tokenData The token data of the user
+   * @returns APIUser object
+   */
+  public async getUserData(tokenData: OAuthTokensData) {
+    return this.rest
+      .get(Routes.oauth2CurrentAuthorization(), {
+        headers: {
+          ...createAuthorizationHeader(tokenData),
+        },
+        auth: false,
+      })
+      .then((res: unknown) => res as RESTGetAPIOAuth2CurrentAuthorizationResult)
+      .then((res) => res.user);
+  }
+
+  /**
+   * Get the metadata of a user on behalf of the current user.
+   * @param tokenData The token data of the user
+   * @returns The metadata of the user.
+   */
   public async getUserMetadata(tokenData: OAuthTokensData) {
-    return this.rest.get(Routes.applicationRoleConnectionMetadata(this.clientId), {
+    return this.rest.get(Routes.userApplicationRoleConnection(this.clientId), {
       headers: {
         ...createAuthorizationHeader(tokenData),
       },
+      auth: false,
     });
   }
 
-  public async setUserMetadata(tokenData: OAuthTokensData, platformName: string, metadata: { [key: string]: string }) {
+  /**
+   * Set the metadata of a user on behalf of the current user if the registered
+   * metadata schema matches. This will overwrite the existing metadata.
+   * @param tokenData The token data of the user
+   * @param platformName The platform name of the user. This is the name that will be displayed in the Discord client on top of the conneciton.
+   * @param metadata The metadata of the user.
+   */
+  public async setUserMetadata(tokenData: OAuthTokensData, platformName: string, metadata: MetadataValues) {
     return this.rest.put(Routes.userApplicationRoleConnection(this.clientId), {
       headers: {
         ...jsonHeaders,
@@ -68,14 +103,7 @@ export class RESTManager {
         platform_name: platformName,
         metadata: metadata,
       },
+      auth: false,
     });
-  }
-
-  public async getUserData(tokenData: OAuthTokensData) {
-    return this.rest.get(Routes.oauth2CurrentAuthorization(), {
-      headers: {
-        ...createAuthorizationHeader(tokenData),
-      },
-    }) as Promise<RESTGetAPIUserResult>;
   }
 }

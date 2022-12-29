@@ -1,6 +1,7 @@
 node_modules
-*.log
 dist
+
+*.log
 
 # Yarn
 .yarn/install-state.gz

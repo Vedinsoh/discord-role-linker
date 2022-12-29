@@ -8,3 +8,7 @@ export type ApplicationMetadata = {
   // description_localizations: { [key: string]: string }; // TODO support only available locales
   type: typeof MetadataTypes;
 };
+
+export type MetadataValues = {
+  [key: string]: string | number | boolean;
+};

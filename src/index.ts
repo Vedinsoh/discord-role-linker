@@ -1,10 +1,12 @@
-export * from './constants/MetadataTypes';
+import { OAuth2Scopes } from 'discord-api-types/v10';
 
+// Database Providers
 export * from './providers/MapProvider';
 export * from './providers/MongoDBProvider';
 
+// Structures
 export * from './structures/RoleLinker';
-export * from './structures/Authorization';
-export * from './structures/TokenStore';
 
-export * from './types/ApplicationMetadata';
+// Constants
+export * from './constants/MetadataTypes';
+export { OAuth2Scopes };

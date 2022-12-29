@@ -1419,7 +1419,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/express@npm:^4":
+"@types/express@npm:^4.17.15":
   version: 4.17.15
   resolution: "@types/express@npm:4.17.15"
   dependencies:
@@ -2037,7 +2037,7 @@ __metadata:
     "@sapphire/ts-config": ^3.3.4
     "@trivago/prettier-plugin-sort-imports": ^4.0.0
     "@types/eslint": ^8.4.10
-    "@types/express": ^4
+    "@types/express": ^4.17.15
     "@types/node": ^18.11.18
     "@types/prettier": ^2.7.2
     "@typescript-eslint/eslint-plugin": ^5.47.1
@@ -2048,7 +2048,7 @@ __metadata:
     eslint-config-prettier: ^8.5.0
     eslint-plugin-prettier: ^4.2.1
     express: ^4.18.2
-    mongoose: ^6.8.1
+    mongoose: ^6.8.2
     prettier: ^2.8.1
     typescript: ^4.9.4
   languageName: unknown
@@ -2955,9 +2955,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"mongoose@npm:^6.8.1":
-  version: 6.8.1
-  resolution: "mongoose@npm:6.8.1"
+"mongoose@npm:^6.8.2":
+  version: 6.8.2
+  resolution: "mongoose@npm:6.8.2"
   dependencies:
     bson: ^4.7.0
     kareem: 2.5.0
@@ -2966,7 +2966,7 @@ __metadata:
     mquery: 4.0.3
     ms: 2.1.3
     sift: 16.0.1
-  checksum: 8590e163a7e83a3fda929b45c6845525ca0ef3e1068558f4d5f95d5dec6613576b205ebec434bf76362d7371c92b7a890999a51d355fd3eb7679c56c34f4a7dc
+  checksum: ff1ae68726124855954d24d575c81d9b737abfea6a051c12621acf40d4f044ecf530dabafd29e70cb8bf4aef18de8f1504c872c11d6db85bfd2a32b9d75b2ab2
   languageName: node
   linkType: hard
 

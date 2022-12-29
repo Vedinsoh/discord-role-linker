@@ -5,8 +5,18 @@ import type { RESTManager } from './RESTManager';
 import { DefaultRestOptions as RestOptions } from '@discordjs/rest';
 
 export type OAuthManagerOptions = {
+  /**
+   * The client secret of your application.
+   */
   clientSecret: string;
+  /**
+   * The redirect URI Discord will redirect to after the user approves the bot.
+   */
   redirectUri: string;
+  /**
+   * The scopes the bot will request.
+   * @accepts OAuth2Scopes
+   */
   scopes?: OAuth2Scopes[];
 };
 
@@ -73,10 +83,6 @@ export class OAuthManager {
     return this._parseOAuthTokenExchangeResponse(res);
   }
 
-  /**
-   * Given an OAuth2 code from the scope approval page, make a request to Discord's
-   * OAuth2 service to retreive an access token, refresh token, and expiration.
-   */
   public async getOAuthTokens(code: string) {
     const body = new URLSearchParams({
       ...this._defaultBody,
