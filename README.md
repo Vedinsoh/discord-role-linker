@@ -98,12 +98,12 @@ app.listen(3000, () => {
 
 
 ## Getting the user's metadata
-- You can get the user metadata by using the `getUserMetadata` method.
+You can get the user's metadata by using the `metadata.getUserData` method
 ```js
-const metadata = await roleLinker.getUserMetadata(userId);
+const metadata = await roleLinker.metadata.getUserData(userId);
 ```
 ## Getting user's data
-- You can get the user's data by using the `getUserData` method
+You can get the user's data by using the `getUserData` method
 ```js
 const user = await roleLinker.getUserData(userId);
 ```
@@ -152,7 +152,7 @@ const roleLinker = new RoleLinker({
     clientSecret: 'YOUR CLIENT SECRET',
     redirectUri: 'YOUR REDIRECT URI',
     databaseProvider: new MongoDBProvider({
-        uri: 'mongodb://localhost:27017/linked-roles',
+        uri: 'mongodb://localhost:27017/role-linker',
         schemaName: 'user_tokens', // Optional, defaults to "user_tokens"
     })
 });
