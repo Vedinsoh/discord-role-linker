@@ -102,10 +102,10 @@ app.listen(3000, () => {
 ```js
 const metadata = await roleLinker.getUserMetadata(userId);
 ```
-## Fetching the user
-- You can fetch the user by using the `fetchUser` method
+## Getting user's data
+- You can get the user's data by using the `getUserData` method
 ```js
-const user = await roleLinker.fetchUser(userId);
+const user = await roleLinker.getUserData(userId);
 ```
 
 
@@ -114,8 +114,8 @@ const user = await roleLinker.fetchUser(userId);
 - In the background, the library stores the user's metadata in a database, or in memory if you are not using a database provider (more info on that below)
 ```js
 const updateUser = async (userId) => {
-    const user = await roleLinker.fetchUser(userId);
-    roleLinker.setUserMetadata(user.id, user.username, { level: 123 })
+    const user = await roleLinker.getUserData(userId);
+    roleLinker.metadata.setUserData(user.id, user.username, { level: 123 })
 }
 
 const updateAllUsers = async () => {
@@ -127,6 +127,18 @@ const updateAllUsers = async () => {
     })
 }
 ```
+You can also create an endpoint that will update the metadata of all the users in your database. This is useful if you want to update the metadata of your users from an external service.
+```js
+app.post("/update-metadata", async (req, res) => {
+  try {
+    await updateUser(req.body.userId);
+    res.sendStatus(204);
+  } catch (e) {
+    res.sendStatus(500);
+  }
+});
+```
+
 ## Persistent storage of the access tokens
 - By default, the library stores the access tokens in memory using Maps. This means that if you restart your application, all the access tokens will be lost. You can overcome this by using a database provider in your RoleLinker constructor:
 
@@ -141,6 +153,7 @@ const roleLinker = new RoleLinker({
     redirectUri: 'YOUR REDIRECT URI',
     databaseProvider: new MongoDBProvider({
         uri: 'mongodb://localhost:27017/linked-roles',
+        schemaName: 'user_tokens', // Optional, defaults to "user_tokens"
     })
 });
 ```
