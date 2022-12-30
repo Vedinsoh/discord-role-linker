@@ -10,7 +10,7 @@ export class AuthManager {
    * and redirect the user there.
    */
   public init(_req: Request, res: Response) {
-    const { state, url } = this._client.restManager.oauthManager.getOAuthUrl();
+    const { state, url } = this._client.rest.oauthManager.getOAuthUrl();
     res.cookie('clientState', state, {
       maxAge: 1000 * 60 * 5, // * 5 minutes
       signed: true,
@@ -38,15 +38,7 @@ export class AuthManager {
    * OAuth2 service to retreive an access token, refresh token, and expiration.
    */
   public async getOAuthTokens(code: string) {
-    return this._client.restManager.oauthManager.getOAuthTokens(code);
-  }
-
-  public async getUserAndStoreToken(code: string) {
-    const tokens = await this.getOAuthTokens(code);
-    const user = await this._client.getUserData(tokens);
-    if (!user) throw new Error('No user found');
-    await this._client.tokenStore.set(user.id, tokens);
-    return user;
+    return this._client.rest.oauthManager.getOAuthTokens(code);
   }
 
   public async getAccessToken(userId: Snowflake) {
@@ -54,7 +46,7 @@ export class AuthManager {
     if (!tokens) throw new Error('No tokens found for user');
 
     if (tokens.expires_at < Date.now()) {
-      const resTokens = await this._client.restManager.oauthManager.refreshOAuthToken(tokens.refresh_token);
+      const resTokens = await this._client.rest.oauthManager.refreshOAuthToken(tokens.refresh_token);
       if (resTokens) {
         this._client.tokenStore.set(userId, resTokens);
         return tokens.access_token;

@@ -34,7 +34,7 @@ app.get('/oauth-callback', async (req, res) => {
     if (!code) return res.sendStatus(403);
 
     // Gets the user and stores the tokens
-    const user = await roleLinker.auth.getUserAndStoreToken(code);
+    const user = await roleLinker.getUserAndStoreToken(code);
 
     // Set user's metadata
     await roleLinker.metadata.setUserData(user.id, user.username, {

@@ -2,6 +2,7 @@ import { GatewayVersion, RESTGetAPIOAuth2CurrentAuthorizationResult, Routes, Sno
 import type { ApplicationMetadata, MetadataValues } from '../types/ApplicationMetadata';
 import type { OAuthTokensData } from '../types/OAuthTokensData';
 import { OAuthManager, OAuthManagerOptions } from './OAuthManager';
+import type { RoleLinker } from './RoleLinker';
 import { REST } from '@discordjs/rest';
 
 const jsonHeaders = {
@@ -22,13 +23,13 @@ export type RESTManagerOptions = OAuthManagerOptions & {
   token: string;
 };
 
-export class RESTManager {
-  public rest: REST;
+export class RESTManager extends REST {
   public clientId: Snowflake;
   public oauthManager: OAuthManager;
 
-  constructor(options: RESTManagerOptions) {
-    this.rest = new REST({ version: GatewayVersion }).setToken(options.token);
+  constructor(options: RESTManagerOptions, private _client: RoleLinker) {
+    super({ version: GatewayVersion });
+    this.setToken(options.token);
 
     if (!options.token) throw new Error('A token is required in the application options');
     if (!options.clientId) throw new Error('A application ID is required in the application options');
@@ -40,19 +41,17 @@ export class RESTManager {
         redirectUri: options.redirectUri,
         scopes: options.scopes,
       },
-      this
+      this._client
     );
   }
 
   public async registerApplicationMetadata(metadata: ApplicationMetadata[]) {
-    return this.rest
-      .put(Routes.applicationRoleConnectionMetadata(this.clientId), {
-        headers: jsonHeaders,
-        body: metadata,
-      })
-      .catch((error: Error) => {
-        throw new Error(`Failed to register application metadata: ${error.message}`);
-      });
+    return this.put(Routes.applicationRoleConnectionMetadata(this.clientId), {
+      headers: jsonHeaders,
+      body: metadata,
+    }).catch((error: Error) => {
+      throw new Error(`Failed to register application metadata: ${error.message}`);
+    });
   }
 
   /**
@@ -61,13 +60,12 @@ export class RESTManager {
    * @returns APIUser object
    */
   public async getUserData(tokenData: OAuthTokensData) {
-    return this.rest
-      .get(Routes.oauth2CurrentAuthorization(), {
-        headers: {
-          ...createAuthorizationHeader(tokenData),
-        },
-        auth: false,
-      })
+    return this.get(Routes.oauth2CurrentAuthorization(), {
+      headers: {
+        ...createAuthorizationHeader(tokenData),
+      },
+      auth: false,
+    })
       .then((res: unknown) => res as RESTGetAPIOAuth2CurrentAuthorizationResult)
       .then((res) => res.user);
   }
@@ -78,7 +76,7 @@ export class RESTManager {
    * @returns The metadata of the user.
    */
   public async getUserMetadata(tokenData: OAuthTokensData) {
-    return this.rest.get(Routes.userApplicationRoleConnection(this.clientId), {
+    return this.get(Routes.userApplicationRoleConnection(this.clientId), {
       headers: {
         ...createAuthorizationHeader(tokenData),
       },
@@ -94,7 +92,7 @@ export class RESTManager {
    * @param metadata The metadata of the user.
    */
   public async setUserMetadata(tokenData: OAuthTokensData, platformName: string, metadata: MetadataValues) {
-    return this.rest.put(Routes.userApplicationRoleConnection(this.clientId), {
+    return this.put(Routes.userApplicationRoleConnection(this.clientId), {
       headers: {
         ...jsonHeaders,
         ...createAuthorizationHeader(tokenData),

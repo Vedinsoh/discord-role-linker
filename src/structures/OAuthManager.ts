@@ -1,7 +1,7 @@
 import { OAuth2Scopes, RESTPostOAuth2AccessTokenResult, Routes } from 'discord-api-types/v10';
 import crypto from 'node:crypto';
 import type { OAuthTokensData } from '../types/OAuthTokensData';
-import type { RESTManager } from './RESTManager';
+import type { RoleLinker } from './RoleLinker';
 import { DefaultRestOptions as RestOptions } from '@discordjs/rest';
 
 export type OAuthManagerOptions = {
@@ -24,13 +24,11 @@ export class OAuthManager {
   private _clientSecret: string;
   private _redirectUri: string;
   private _scopes: OAuth2Scopes[] = [OAuth2Scopes.RoleConnectionsWrite, OAuth2Scopes.Identify];
-  private _restManager: RESTManager;
 
-  constructor(options: OAuthManagerOptions, restManager: RESTManager) {
+  constructor(options: OAuthManagerOptions, private _client: RoleLinker) {
     if (!options.clientSecret) throw new Error('A client secret is required in the application options');
     if (!options.redirectUri) throw new Error('A redirect URI is required in the application options');
 
-    this._restManager = restManager;
     this._clientSecret = options.clientSecret;
     this._redirectUri = options.redirectUri;
     if (options.scopes) this._scopes = options.scopes;
@@ -38,7 +36,7 @@ export class OAuthManager {
 
   private get _defaultBody() {
     return {
-      client_id: this._restManager.clientId,
+      client_id: this._client.rest.clientId,
       client_secret: this._clientSecret,
     };
   }
@@ -52,7 +50,7 @@ export class OAuthManager {
     const state = crypto.randomUUID();
     const url = new URL(`${RestOptions.api}/oauth2/authorize`);
 
-    url.searchParams.set('client_id', this._restManager.clientId);
+    url.searchParams.set('client_id', this._client.rest.clientId);
     url.searchParams.set('redirect_uri', this._redirectUri);
     url.searchParams.set('prompt', 'consent');
     url.searchParams.set('response_type', 'code');
@@ -72,7 +70,7 @@ export class OAuthManager {
   }
 
   private async _postOAuthTokenExchange(body: URLSearchParams) {
-    const res = (await this._restManager.rest.post(Routes.oauth2TokenExchange(), {
+    const res = (await this._client.rest.post(Routes.oauth2TokenExchange(), {
       body,
       passThroughBody: true,
       headers: {
