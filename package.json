@@ -1,6 +1,6 @@
 {
   "name": "discord-role-linker",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": " A powerful library to easily manage your Discord linked roles using OAuth2",
   "author": "Vedinsoh",
   "license": "MIT",
