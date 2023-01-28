@@ -44,7 +44,7 @@ export class MongoDBProvider {
       // * Create new user
       const newUser = new this._UserModel({
         id: userId,
-        tokens: tokenData,
+        tokenData,
       });
       await newUser.save();
     } else {

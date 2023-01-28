@@ -11,7 +11,7 @@ A powerful library to easily manage your Discord linked roles using OAuth2!
 - Create a new application on the [Discord Developer Portal](https://discord.com/developers/applications)
 - Go to the **Bot** tab, create a new bot and copy the bot token (click on **Reset Token** button)
 - Go to the **General Information** tab and set the following: `http://localhost:3000/linked-role` in the **Linked roles verification URL** field
-- Go to the **OAuth2** tab and add the following URI in the **Redirects** section: `http://localhost:3000/auth-callback`
+- Go to the **OAuth2** tab and add the following URI in the **Redirects** section: `http://localhost:3000/oauth-callback`
 - On the same page, copy your **Client Secret**, above the Redirects section
 
 ### Install Discord Role Linker:
