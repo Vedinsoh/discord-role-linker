@@ -166,3 +166,6 @@ You can use one of the following built-in providers to store the access tokens i
 # Bugs, glitches and issues
 
 If you encounter any problems feel free to open an issue or message me on Discord: `Vedinsoh#0001`
+
+# Credits
+Auth flow inspired by https://github.com/discord/linked-roles-sample and https://github.com/meister03/discord-linked-roles
